@@ -34,6 +34,7 @@ jobs:
           port: ${{ secrets.PI_PORT }}
           source: "build/libs/app.jar"
           target: "Project/homework"
+          strip_components: 2
 
       - name: Restart Docker Compose on Raspberry Pi
         uses: appleboy/ssh-action@master
