@@ -33,7 +33,7 @@ jobs:
           password: ${{ secrets.PI_PASSWORD }}
           port: ${{ secrets.PI_PORT }}
           source: "build/libs/app.jar"
-          target: "Project/homework/app.jar"
+          target: "Project/homework"
 
       - name: Restart Docker Compose on Raspberry Pi
         uses: appleboy/ssh-action@master
