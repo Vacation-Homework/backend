@@ -21,7 +21,7 @@
 </br>
 
 
-## 📚 주요기능 소개
+## 주요기능 소개
 
 **(1) 일기쓰기**
 - 사용자가 작성한 일기(제목, 본문, 감정 등)를 Spring 서버에 저장합니다.
@@ -40,3 +40,23 @@
 
 
 </br>
+</br>
+
+## 시스템 아키텍처
+![image](https://github.com/user-attachments/assets/29be7367-4731-4f48-9c11-00c4a0d520c4)
+
+</br>
+</br>
+
+## 📚 기술스택
+> **Backend** </br>
+`Java 17`,  `SpringBoot 3.2.4`,  `JPA`,  `MySQL 8.0.41`, `RabbtMQ`
+
+> **CI/CD & Infra** </br>
+`GithubActions`, `Docker`, `Docker-compose`, `NginX`, `portainer`
+
+> **Frontend** </br>
+`Flutter`
+
+> **AI** </br>
+`Fast API`,  `Ollama`
