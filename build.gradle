@@ -23,6 +23,7 @@ repositories {
 	mavenCentral()
 }
 
+
 dependencies {
 	// Swagger
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
@@ -37,10 +38,10 @@ dependencies {
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
 	// QueryDSL
-	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-	annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
-	annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
-	annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+	//implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+	//annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
+	//annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
+	//annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
 
 	// Security + JWT
 	implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -60,8 +61,8 @@ dependencies {
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
 
-	// Kafka (또는 Redis PubSub 선택 가능)
-	implementation 'org.springframework.kafka:spring-kafka'
+	// RabbitMQ
+	implementation 'org.springframework.boot:spring-boot-starter-amqp'
 
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -78,4 +79,8 @@ sourceSets {
 	main {
 		java.srcDirs += [querydslDir]
 	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = "UTF-8"
 }

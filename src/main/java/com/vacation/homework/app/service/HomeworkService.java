@@ -4,8 +4,12 @@ import com.vacation.homework.app.common.BaseTime;
 import com.vacation.homework.app.domain.Homework;
 import com.vacation.homework.app.domain.User;
 import com.vacation.homework.app.domain.Weather;
+import com.vacation.homework.app.dto.HomeworkDto;
+import com.vacation.homework.app.exception.Code;
+import com.vacation.homework.app.rabbitMq.HomeworkMessageProducer;
 import com.vacation.homework.app.repository.HomeworkRepository;
 import com.vacation.homework.app.repository.UserRepository;
+import com.vacation.homework.app.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,14 +24,21 @@ public class HomeworkService {
 
     private final HomeworkRepository homeworkRepository;
     private final UserRepository userRepository;
+    private final HomeworkMessageProducer homeworkMessageProducer;
 
     @Transactional
-    public void saveHomework(Long userSeq, String title, String content, Weather weather, String photoUrl) {
-        User user = userRepository.findById(userSeq)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+    public Homework saveHomework(Long userSeq, LocalDateTime selectedDate, String title, String content, Weather weather, String photoUrl) {
+        User user = userRepository.findByUserSeqAndIsWithdrawnFalse(userSeq)
+                .orElseThrow(() -> new GeneralException(Code.NOT_FOUND_USER));
 
-        Homework homework = Homework.builder()
+        homeworkRepository.findByUserAndSelectedDate(user, selectedDate)
+                .ifPresent(h -> {
+                    throw new GeneralException(Code.HOMEWORK_ALREADY_EXISTS);
+                });
+
+        Homework homework = homeworkRepository.save(Homework.builder()
                 .user(user)
+                .selectedDate(selectedDate)
                 .title(title)
                 .content(content)
                 .weather(weather)
@@ -36,15 +47,21 @@ public class HomeworkService {
                         .createdAt(LocalDateTime.now())
                         .build())
                 .isDeleted(false)
-                .build();
+                .build());
 
-        homeworkRepository.save(homework);
+        homeworkMessageProducer.sendHomeworkCreated(userSeq, homework.getHomeworkSeq());
+
+        return homework;
     }
 
     @Transactional(readOnly = true)
-    public Homework getHomework(Long userSeq, Long homeworkSeq) {
-        return homeworkRepository.findByHomeworkSeqAndUser_UserSeqAndIsDeletedFalse(homeworkSeq, userSeq)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 권한이 없습니다."));
+    public HomeworkDto getHomework(Long userSeq, Long homeworkSeq) {
+        Homework hw = homeworkRepository.findByHomeworkSeqAndUser_UserSeqAndIsDeletedFalse(homeworkSeq, userSeq)
+                .orElseThrow(() -> new GeneralException(Code.NOT_FOUND_HOMEWORK_OR_UNAUTHORIZED));
+        User user = userRepository.findByUserSeqAndIsWithdrawnFalse(userSeq)
+                .orElseThrow(() -> new GeneralException(Code.NOT_FOUND_USER));
+
+        return HomeworkDto.from(hw, user.getNickname());
     }
 
     @Transactional(readOnly = true)
@@ -53,16 +70,15 @@ public class HomeworkService {
         LocalDateTime start = ym.atDay(1).atStartOfDay();
         LocalDateTime end = ym.atEndOfMonth().atTime(23, 59, 59);
 
-        return homeworkRepository.findAllByUser_UserSeqAndIsDeletedFalseAndBaseTime_CreatedAtBetween(
+        return homeworkRepository.findAllByUser_UserSeqAndIsDeletedFalseAndSelectedDateBetweenOrderBySelectedDateDesc(
                 userSeq, start, end);
     }
 
     @Transactional
     public void deleteHomework(Long userSeq, Long homeworkSeq) {
         Homework hw = homeworkRepository.findByHomeworkSeqAndUser_UserSeqAndIsDeletedFalse(homeworkSeq, userSeq)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않거나 권한이 없습니다."));
+                .orElseThrow(() -> new GeneralException(Code.NOT_FOUND_HOMEWORK_OR_UNAUTHORIZED));
 
-        hw.setIsDeleted(true);
-        hw.getBaseTime().setDeletedAt(LocalDateTime.now());
+        homeworkRepository.delete(hw);
     }
 }

@@ -1,6 +1,7 @@
 package com.vacation.homework.app.controller;
 
 import com.vacation.homework.app.dto.TermsDto;
+import com.vacation.homework.app.dto.base.DataResponseDto;
 import com.vacation.homework.app.service.TermsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,7 +21,7 @@ public class TermsController {
     @Operation(summary = "최신 약관 조회", description = "현재 적용 중인 약관(version=app.terms.version)을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "약관 조회 성공")
     @GetMapping("/latest")
-    public ResponseEntity<List<TermsDto>> getLatestTerms() {
-        return ResponseEntity.ok(termsService.getLatestTerms());
+    public DataResponseDto<List<TermsDto>> getLatestTerms() {
+        return DataResponseDto.of(termsService.getLatestTerms());
     }
 }

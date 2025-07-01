@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,4 +19,5 @@ public class CreateHomeworkRequest {
     private String content;
     private Weather weather;
     private String photoUrl;
+    private LocalDateTime selectedDate;
 }

@@ -30,6 +30,7 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
+    private final JwtFilter jwtFilter;
     private final CustomUserDetailsService userDetailsService;
     private final CorsProperties corsProperties;
 
@@ -42,6 +43,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**",
                                 "/api/users/**",
                                 "/api/terms/**",
+                                "/api/comment/**",
+
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
@@ -54,6 +57,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                //.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService),
                         UsernamePasswordAuthenticationFilter.class);
 

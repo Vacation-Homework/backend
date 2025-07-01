@@ -14,8 +14,14 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        show_sql: true
+        show_sql: false
     database-platform: org.hibernate.dialect.MySQL8Dialect
+
+  rabbitmq:
+    host: ${RABBIT_MQ}
+    port: 5672
+    username: ${RABBIT_USER}
+    password: ${RABBIT_PASS}
 
 
 # cors
@@ -42,7 +48,8 @@ jwt:
   refresh-token-expiration: ${REFRESH_TOKEN_EXP}
 
 firebase:
-  service-account-path: classpath:firebase/firebase-service-key.json
+  key:
+    path: ${FIREBASE_KEY_PATH}
 
 springdoc:
   api-docs:
@@ -54,3 +61,13 @@ springdoc:
 app:
   terms:
     version: 1.0.0
+
+
+ai:
+  secret-key: ${AI_SECRET_KEY}
+
+logging:
+  level:
+    org.hibernate.SQL: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO
+

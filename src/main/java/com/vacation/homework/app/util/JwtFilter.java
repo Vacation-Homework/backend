@@ -33,20 +33,43 @@ public class JwtFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
-            if (jwtUtil.validateToken(token)) {
-                String userId = jwtUtil.getUserIdFromToken(token);
-                User user = userRepository.findByUserId(userId).orElse(null);
+            try {
+                if (jwtUtil.validateToken(token)) {
+                    String userId = jwtUtil.getUserIdFromToken(token);
+                    User user = userRepository.findByUserIdAndIsWithdrawnFalse(userId).orElse(null);
 
-                if (user != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            user, null, null // 권한 처리 필요시 user.getAuthorities()
-                    );
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    if (user != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                user, null, null
+                        );
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
                 }
+            } catch (io.jsonwebtoken.ExpiredJwtException e) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("""
+                {
+                    "code": "TOKEN_EXPIRED",
+                    "message": "액세스 토큰이 만료되었습니다."
+                }
+            """);
+                return;
+            } catch (Exception e) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("""
+                {
+                    "code": "INVALID_TOKEN",
+                    "message": "유효하지 않은 액세스 토큰입니다."
+                }
+            """);
+                return;
             }
         }
 
         filterChain.doFilter(request, response);
     }
+
 }

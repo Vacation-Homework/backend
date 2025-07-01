@@ -4,7 +4,6 @@ package com.vacation.homework.app.domain;
 import com.vacation.homework.app.common.BaseTime;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comment")
@@ -13,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Comment {
+public class Comment{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,8 +29,10 @@ public class Comment {
     private String spellCheckResult;
 
     @Embedded
-    private BaseTime baseTime;
+    private BaseTime baseTime = new BaseTime();
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isDeleted = false;
+
 }

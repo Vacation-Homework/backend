@@ -17,11 +17,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userSeq;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String userId;
 
     @Column(nullable = false, length = 100)
     private String password;
+
+    @Column(nullable = false, length = 512)
+    private String fcmToken;
 
     @Column(nullable = false, length = 5)
     private String nickname;

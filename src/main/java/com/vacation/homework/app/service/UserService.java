@@ -4,6 +4,10 @@ import com.vacation.homework.app.common.BaseTime;
 import com.vacation.homework.app.domain.Agree;
 import com.vacation.homework.app.domain.Terms;
 import com.vacation.homework.app.domain.User;
+import com.vacation.homework.app.dto.DuplicatedDto;
+import com.vacation.homework.app.dto.UserInfoResponse;
+import com.vacation.homework.app.exception.Code;
+import com.vacation.homework.app.exception.GeneralException;
 import com.vacation.homework.app.repository.AgreeRepository;
 import com.vacation.homework.app.repository.TermsRepository;
 import com.vacation.homework.app.repository.UserRepository;
@@ -30,8 +34,8 @@ public class UserService {
     private String termsVersion;
 
     public void register(String userId, String rawPassword, String nickname) {
-        if (userRepository.findByUserId(userId).isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
+        if (userRepository.findByUserIdAndIsWithdrawnFalse(userId).isPresent()) {
+            throw new GeneralException(Code.DUPLICATE_USER_ID);
         }
 
         List<Terms> termsList = termsRepository.findTermsByVersion(termsVersion);
@@ -46,10 +50,8 @@ public class UserService {
                 .isWithdrawn(false)
                 .build();
 
-        // 1. 유저 먼저 저장 (PK 생성)
         userRepository.save(user);
 
-        // 2. 동의 객체들 생성
         List<Agree> agrees = termsList.stream()
                 .map(terms -> Agree.builder()
                         .user(user)
@@ -61,37 +63,56 @@ public class UserService {
                         .build())
                 .toList();
 
-        // 3. 일괄 저장
         agreeRepository.saveAll(agrees);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<User> getByUserId(String userId) {
-        return userRepository.findByUserId(userId);
     }
 
     @Transactional
     public void withdraw(Long userSeq) {
-        User user = userRepository.findById(userSeq)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        User user = userRepository.findByUserSeqAndIsWithdrawnFalse(userSeq)
+                .orElseThrow(() -> new GeneralException(Code.NOT_FOUND_USER));
 
         user.setIsWithdrawn(true);
         user.setWithdrawnAt(LocalDateTime.now());
+
+        user.setFcmToken(null);
+        user.setRefreshToken(null);
     }
 
     @Transactional
     public void updatePassword(Long userSeq, String newRawPassword) {
-        User user = userRepository.findById(userSeq)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        User user = userRepository.findByUserSeqAndIsWithdrawnFalse(userSeq)
+                .orElseThrow(() -> new GeneralException(Code.NOT_FOUND_USER));
 
         user.setPassword(passwordEncoder.encode(newRawPassword));
     }
 
     @Transactional
     public void updateNickname(Long userSeq, String newNickname) {
-        User user = userRepository.findById(userSeq)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        User user = userRepository.findByUserSeqAndIsWithdrawnFalse(userSeq)
+                .orElseThrow(() -> new GeneralException(Code.NOT_FOUND_USER));
 
         user.setNickname(newNickname);
+    }
+
+    @Transactional(readOnly = true)
+    public UserInfoResponse getUserInfo(Long userSeq) {
+        User user = userRepository.findByUserSeqAndIsWithdrawnFalse(userSeq)
+                .orElseThrow(() -> new GeneralException(Code.NOT_FOUND_USER));
+        return UserInfoResponse.from(user);
+    }
+
+    @Transactional(readOnly = true)
+    public DuplicatedDto isDuplicatedUserId(String userId) {
+        Optional<User> user = userRepository.findByUserIdAndIsWithdrawnFalse(userId);
+        boolean b= user.isEmpty();
+        return DuplicatedDto.builder().duplicated(b).build();
+    }
+
+    @Transactional
+    public void logout(Long userSeq) {
+        User user = userRepository.findByUserSeqAndIsWithdrawnFalse(userSeq)
+                .orElseThrow(() -> new GeneralException(Code.NOT_FOUND_USER));
+        user.setFcmToken(null);
+        user.setRefreshToken(null);
     }
 }

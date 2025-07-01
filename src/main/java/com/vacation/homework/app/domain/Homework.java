@@ -35,10 +35,14 @@ public class Homework {
 
     private String photoUrl;
 
+    @Column(nullable = false)
+    private LocalDateTime selectedDate;
+
     @Embedded
     private BaseTime baseTime;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isDeleted = false;
 
     @OneToOne(mappedBy = "homework", cascade = CascadeType.ALL, fetch = FetchType.EAGER)

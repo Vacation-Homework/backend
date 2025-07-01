@@ -31,5 +31,6 @@ public class Agree {
     private BaseTime baseTime;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isDeleted = false;
 }
